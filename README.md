@@ -1,7 +1,7 @@
 # vue-backbone  
 
 [![Build Status](https://travis-ci.org/mikeapr4/vue-backbone.png?branch=master)](https://travis-ci.org/mikeapr4/vue-backbone)
-[![Coverage Status][coveralls-image]][coveralls-url]
+[![Coverage Status][https://coveralls.io/repos/github/mikeapr4/vue-backbone/badge.svg?branch=master]](https://coveralls.io/github/mikeapr4/vue-backbone)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 Vue.js Plugin to facilitate gradual migration from Backbone. Backbone Collections and Models can be safely integrated with Vue instances and components, with focus on clean code and future adoption of a Flux library (e.g. Vuex/Redux/Flux).
