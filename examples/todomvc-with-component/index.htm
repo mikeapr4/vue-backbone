@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf8"/>
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/todomvc-app-css@2.0.6/index.css"/>
+	<script type="text/javascript" src="https://unpkg.com/jquery"></script>
+	<script type="text/javascript" src="https://unpkg.com/underscore"></script>
+	<script type="text/javascript" src="https://unpkg.com/backbone"></script>
+	<script type="text/javascript" src="https://unpkg.com/backbone.localstorage"></script>
+	<script type="text/javascript" src="https://unpkg.com/vue"></script>
+	<script type="text/javascript" src="../../dist/vue-backbone.js"></script>
+  <script type="text/javascript" src="todomvc-backbone.js"></script>
+	<script type="text/template" id="todo-template">
+    <li
+      class="todo"
+      :class="{ completed: model.completed, editing: editing }">
+      <div class="view">
+        <input class="toggle" type="checkbox" v-model="model.completed">
+        <label @dblclick="editTodo">{{ model.title }}</label>
+        <button class="destroy" @click="removeTodo"></button>
+      </div>
+      <input class="edit" type="text"
+        v-model="model.title"
+        v-todo-focus="editing"
+        @blur="doneEdit"
+        @keyup.enter="doneEdit"
+        @keyup.esc="cancelEdit">
+    </li>    
+  </script>
+	<script type="text/javascript" src="todomvc-vue-with-component.js"></script>
+	<style>
+		[v-cloak] { display: none; }
+	</style>
+</head>
+<body>
+<section class="todoapp">
+  <header class="header">
+    <h1>todos</h1>
+    <input class="new-todo"
+      autofocus autocomplete="off"
+      placeholder="What needs to be done?"
+      v-model="newTodo"
+      @keyup.enter="addTodo">
+  </header>
+  <section class="main" v-show="todos.length" v-cloak>
+    <input class="toggle-all" type="checkbox" v-model="allDone">
+    <ul class="todo-list">
+      <todo v-for="todo in filteredTodos" :model="todo" :key="todo.id"/>
+    </ul>
+  </section>
+  <footer class="footer" v-show="todos.length" v-cloak>
+    <span class="todo-count">
+      <strong>{{ remaining }}</strong> {{ remaining | pluralize }} left
+    </span>
+    <ul class="filters">
+      <li><a href="#/all" :class="{ selected: visibility == 'all' }">All</a></li>
+      <li><a href="#/active" :class="{ selected: visibility == 'active' }">Active</a></li>
+      <li><a href="#/completed" :class="{ selected: visibility == 'completed' }">Completed</a></li>
+    </ul>
+    <button class="clear-completed" @click="removeCompleted" v-show="todos.length > remaining">
+      Clear completed
+    </button>
+  </footer>
+</section>
+<footer class="info">
+  <p>Double-click to edit a todo</p>
+  <p>Written by <a href="http://evanyou.me">Evan You</a></p>
+  <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+</footer>
+</body>
+</html>

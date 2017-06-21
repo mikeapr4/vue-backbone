@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf8"/>
+	<style>
+		#demo {
+		  font-family: 'Helvetica', Arial, sans-serif;
+		}
+		a {
+		  text-decoration: none;
+		  color: #f66;
+		}
+		li {
+		  line-height: 1.5em;
+		  margin-bottom: 20px;
+		}
+		.author, .date {
+		  font-weight: bold;
+		}
+	</style>
+	<script type="text/javascript" src="https://unpkg.com/jquery"></script>
+	<script type="text/javascript" src="https://unpkg.com/underscore"></script>
+	<script type="text/javascript" src="https://unpkg.com/backbone"></script>
+	<script type="text/javascript" src="https://unpkg.com/vue"></script>
+	<script type="text/javascript" src="../dist/vue-backbone.js"></script>
+	<script type="text/javascript">
+	window.onload = function() {
+
+		// Install Plugin
+		Vue.use(VueBackbone);
+
+		/**
+		 * Based on the Vue.js example (https://vuejs.org/v2/examples/commits.html)
+		 */
+
+		var CommitModel = Backbone.Model.extend({
+
+			shortHash: function() {
+				return this.get('sha').slice(0, 7);
+			}
+
+		});
+
+		var CommitCollection = Backbone.Collection.extend({
+
+			model: CommitModel,
+
+			url: 'https://api.github.com/repos/vuejs/vue/commits',
+			
+			setBranch: function(branch) {
+				this.fetch({
+					reset: true, 
+					data: {
+						per_page: 3,
+						sha: branch
+					}
+				});			
+			}
+
+		});
+
+
+		new Vue({
+
+		  el: '#demo',
+
+		  // Vue-Backbone initial options		  
+		  bb: function() {
+		  	return {
+		  		commits: new CommitCollection()
+		  	};
+		  },
+
+		  data: {
+		    branches: ['master', 'dev'],
+		    currentBranch: 'master'
+		  },
+
+		  created: function () {
+		    this.fetchData()
+		  },
+
+		  watch: {
+		    currentBranch: 'fetchData'
+		  },
+
+		  filters: {
+		    truncate: function (v) {
+		      var newline = v.indexOf('\n')
+		      return newline > 0 ? v.slice(0, newline) : v		    	
+		    },
+		    formatDate: function (v) {
+		      return v.replace(/T|Z/g, ' ')
+		    }
+		  },
+
+		  methods: {
+		    fetchData: function () {
+		    	this.commits.setBranch(this.currentBranch);
+		    }
+		  }
+
+		});
+
+	}
+	</script>
+</head>
+<body>
+<div id="demo">
+  <h1>Latest Vue.js Commits</h1>
+  <template v-for="branch in branches">
+    <input type="radio"
+      :id="branch"
+      :value="branch"
+      name="branch"
+      v-model="currentBranch">
+    <label :for="branch">{{ branch }}</label>
+  </template>
+  <p>vuejs/vue@{{ currentBranch }}</p>
+  <ul>
+    <!-- Using array of enhanced models -->
+    <li v-for="record in commits">
+      <a :href="record.html_url" target="_blank" class="commit">{{ record.shortHash() }}</a> <!-- access to the model -->
+      - <span class="message">{{ record.commit.message | truncate }}</span><br>
+      by <span class="author"><a :href="record.author.html_url" target="_blank">{{ record.commit.author.name }}</a></span>
+      at <span class="date">{{ record.commit.author.date | formatDate }}</span>
+    </li>
+  </ul>
+</div>
+</html>
