@@ -74,23 +74,22 @@ Below is a full table of the supported functions, where by default they come fro
 | add\* | every | indexBy\* | modelId\* | set\* |
 | :--- | :--- | :--- | :--- | :--- |
 | all\* | fetch\* | indexOf | off\* | shift\*\* |
-
-\| any\* \| fill \| initial\*\* \| on\* \| shuffle\*\* \|  
-\| at\*\* \| filter \| initialize\* \| once\* \| size\* \|  
-\| bind\* \| find \| inject\* \| parse\* \| slice \|  
-\| chain\* \| findIndex \| invoke\* \| partition\* \| some \|  
-\| clone\* \| findLastIndex\* \| isEmpty\* \| pluck\* \| sort\* \|  
-\| collect\* \| findWhere\*\* \| join \| pop\*\* \| sortBy\*\* \|  
-\| concat \| first\*\* \| keys \| push\* \| splice \|  
-\| contains\* \| foldl\* \| last\*\* \| reduce \| stopListening\* \|  
-\| copyWithin \| foldr\* \| lastIndexOf \| reduceRight \| sync\* \|  
-\| countBy\* \| forEach \| length \| reject\*\* \| tail\*\* \|  
-\| create\* \| get\*\* \| listenTo\* \| remove\*\* \| take\*\* \|  
-\| detect\*\* \| groupBy\* \| listenToOnce\* \| reset\* \| toArray\*\* \|  
-\| difference\* \| has\* \| map \| rest\*\* \| toJSON\* \|  
-\| drop\*\* \| head\*\* \| max\* \| reverse \| toLocaleString \|  
-\| each\* \| include\* \| min\* \| sample\* \| toString \|  
-\| entries \| includes\* \| model\* \| select\*\* \| trigger\* \|
+| any\* | fill | initial\*\* | on\* | shuffle\*\* |  
+| at\*\* | filter | initialize\* | once\* | size\* |  
+| bind\* | find | inject\* | parse\* | slice |  
+| chain\* | findIndex | invoke\* | partition\* | some |  
+| clone\* | findLastIndex\* | isEmpty\* | pluck\* | sort\* |  
+| collect\* | findWhere\*\* | join | pop\*\* | sortBy\*\* |  
+| concat | first\*\* | keys | push\* | splice |  
+| contains\* | foldl\* | last\*\* | reduce | stopListening\* |  
+| copyWithin | foldr\* | lastIndexOf | reduceRight | sync\* |  
+| countBy\* | forEach | length | reject\*\* | tail\*\* |  
+| create\* | get\*\* | listenTo\* | remove\*\* | take\*\* |  
+| detect\*\* | groupBy\* | listenToOnce\* | reset\* | toArray\*\* |  
+| difference\* | has\* | map | rest\*\* | toJSON\* |  
+| drop\*\* | head\*\* | max\* | reverse | toLocaleString |  
+| each\* | include\* | min\* | sample\* | toString |  
+| entries | includes\* | model\* | select\*\* | trigger\* |
 
 ## Converting to/from Enhanced Interfaces
 
