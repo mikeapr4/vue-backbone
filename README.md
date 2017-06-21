@@ -1,6 +1,6 @@
 # vue-backbone  
 
-[![Build Status][travis-image]][travis-url]
+[![Build Status](https://travis-ci.org/mikeapr4/vue-backbone.png?branch=master)](https://travis-ci.org/mikeapr4/vue-backbone)
 [![Coverage Status][coveralls-image]][coveralls-url]
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
