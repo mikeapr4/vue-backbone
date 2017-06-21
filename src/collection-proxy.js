@@ -12,6 +12,8 @@
  *
  * To avoid interference, it's stored under the Model property `_vuebackbone_proxy`. This proxy
  * is only really intended to be used by Vue templates.
+ *
+ * Generate documentation using: https://jsfiddle.net/fLcn09eb/3/
  */
 
 const arrayPriority = [

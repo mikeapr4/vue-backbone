@@ -16,7 +16,7 @@ Vue.js Plugin to facilitate gradual migration from Backbone. Backbone Collection
 
 ## Documentation
 
-Usage and guidelines documentation available [here](https://mikeapr4.gitbooks.io/vue-backbone/guidelines.html) 
+Usage and guidelines documentation available [here](https://mikeapr4.gitbooks.io/vue-backbone) 
 
 ## Installation
 
@@ -27,6 +27,12 @@ Via NPM
 Via Yarn
 
     yarn add vue-backbone
+
+Script include (see [dist](https://github.com/mikeapr4/vue-backbone/tree/master/dist) folder)
+
+```html
+<script src="vue-backbone.min.js"></script>
+```
 
 ## Examples
 
