@@ -1,0 +1,26 @@
+{
+  "gitbook": ">3.0.0",
+  "root": "./docs",
+  "plugins": ["edit-link", "github", "-fontsettings", "jsfiddle"],
+  "pluginsConfig": {
+    "edit-link": {
+      "base": "https://github.com/mikeapr4/vue-backbone/tree/master/docs",
+      "label": "Edit This Page"
+    },
+    "github": {
+      "url": "https://github.com/mikeapr4/vue-backbone/"
+    },
+    "jsfiddle": {
+      "type": "script",
+      "tabs": ["js", "html", "result"],
+      "height": "500",
+      "width": "500"
+    }
+  },
+  "links": {
+    "sharing": {
+      "facebook": false,
+      "twitter": false
+    }
+  }
+}
