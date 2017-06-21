@@ -72,7 +72,6 @@ Added to this are the `Backbone.Collection` functions, e.g. `on`, `sortBy` or `f
 Below is a full table of the supported functions, where by default they come from the `Array` prototype, but **\*** indicates a `Backbone.Collection` function, and **\*\*** indicates a `Backbone.Collection` function modified to return model\(s\) with the enhanced interface.
 
 | add\* | every | indexBy\* | modelId\* | set\* |
-| :--- | :--- | :--- | :--- | :--- |
 | all\* | fetch\* | indexOf | off\* | shift\*\* |
 | any\* | fill | initial\*\* | on\* | shuffle\*\* |  
 | at\*\* | filter | initialize\* | once\* | size\* |  
