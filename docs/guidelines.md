@@ -43,6 +43,23 @@ new Vue({
   * e.g. `vm.item = collection[collection.indexOf(vm.item) + 1]`
 * See below for the interface these Backbone objects use once attached to the Vue instance.
 
+### Components
+
+Vue Components are not constructed in Javascript, but rather from HTML tags and properties. When defining the component with `props`, the `bb` option should be included as above, but instead of a reference to a concrete Backbone object, it is flagged as a property, this way when the component is instantiated, it will find the Backbone object in the `props`.
+
+```js
+Vue.component('item-view', {
+  props: ['item'],
+  template: '{{ item.cost }}',
+  el: '#app',
+  bb: function() {
+    return {
+        item: {prop: true}
+    };
+  }
+})
+```
+
 ## `Backbone.Model` Interface
 
 When a model is attached to a Vue, any access from the Vue goes through an enhanced interface \(the original model is not modified\). This interface is a **superset** of the `Backbone.Model` itself, all the standard Backbone methods \(including `get`/`set`\) along with any custom ones for this Model class, and the attributes of the model are exposed as read/write properties directly.
