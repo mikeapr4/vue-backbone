@@ -1,6 +1,6 @@
 {
     "extends": "eslint:recommended",
-		"parserOptions": {
+    "parserOptions": {
         "ecmaVersion": 6,
         "sourceType": "module"
     },
@@ -11,6 +11,6 @@
         "jasmine": true
     },
     "rules": {
-    		"no-console": 0
+        "no-console": 0
     }   
 }
