@@ -223,10 +223,24 @@
           }
         },
         mounted: function() {
-          // Check for deep nested reactivity
+          var vm = this;
+          // Top-level reactivity
           setTimeout(() => {
-            dept1.set({ locations: [loc1, loc2] });
-            dept1.set({ controls: [project1, project2] });
+            vm.employee.manager = new Manager({
+              fname: 'Bob',
+              lname: 'Smith',
+              age: 32,
+              sex: 'M'
+            });
+          }, 1000);
+          // Deep nested model reactivity
+          setTimeout(() => {
+            vm.employee.works_for.name = 'Accounts';
+          }, 2000);
+          // Check for deep nested collection reactivity
+          setTimeout(() => {
+            vm.employee.works_for.locations = [loc1, loc2];
+            vm.employee.works_for.controls = [project1, project2];
           }, 3000);
         },
       });
