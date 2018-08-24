@@ -29,7 +29,32 @@ function proxyModelAttribute(proxy, model, attr, conflictPrefix) {
 	});
 }
 
-export default function(model, conflictPrefix) {
+/**
+ * Attach proxy getter/setter for a model relationship (one-to-one or one-to-many)
+ *
+ * Getter should attempt to map to the proxy, while setter should attempt
+ * to switch back to original backbone object.
+ */
+function proxyModelRelation(proxy, model, attr, conflictPrefix) {
+	let getter = function() {
+		const val = model.get(attr);
+		return val && val._vuebackbone_proxy || val;
+  }
+  let setter = function(val) {
+		model.set(attr, val && val._vuebackbone_original || val);
+  }
+
+  // If there's a conflict with a function from the model, add the attribute with the prefix
+  let safeAttr = proxy[attr] ? conflictPrefix + attr : attr;
+
+  Object.defineProperty(proxy, safeAttr, {
+    enumerable: true,
+    get: getter,
+    set: setter
+  });
+}
+
+export default function modelProxy(model, conflictPrefix, associations) {
 	let proxy = {};
 
 	// Attach bound version of all the model functions to the proxy
@@ -42,10 +67,25 @@ export default function(model, conflictPrefix) {
 		}
 	}
 
-	// Attach getter/setters for the model attributes.
-	Object.keys(model.attributes).forEach(attr => {
-		proxyModelAttribute(proxy, model, attr, conflictPrefix);
-	});
+	// https://github.com/dhruvaray/backbone-associations
+  if (associations && model.relations) {
+    const relations = model.relations.map(r => r.key);
+    relations.forEach(attr => {
+      proxyModelRelation(proxy, model, attr, conflictPrefix);
+		});
+    // Attach getter/setters for the model attributes.
+    Object.keys(model.attributes).filter(attr => !relations.includes(attr))
+			.forEach(attr => {
+				proxyModelAttribute(proxy, model, attr, conflictPrefix);
+			});
+	}
+	else {
+    // Attach getter/setters for the model attributes.
+    Object.keys(model.attributes).forEach(attr => {
+      proxyModelAttribute(proxy, model, attr, conflictPrefix);
+    });
+	}
+
 	if (!proxy.id) {
 		// sometimes ID is a field in the model (in which case it'll be proxied already)
 		Object.defineProperty(proxy, "id", {

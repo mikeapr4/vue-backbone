@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf8"/>
+	<style>
+		#demo {
+		  font-family: 'Helvetica', Arial, sans-serif;
+		}
+		dt {
+		  font-weight: bold;
+		}
+	</style>
+	<script type="text/javascript" src="https://unpkg.com/jquery"></script>
+	<script type="text/javascript" src="https://unpkg.com/underscore"></script>
+	<script type="text/javascript" src="https://unpkg.com/backbone"></script>
+    <script type="text/javascript" src="https://unpkg.com/backbone-associations"></script>
+	<script type="text/javascript" src="https://unpkg.com/vue"></script>
+	<script type="text/javascript" src="../../dist/vue-backbone.js"></script>
+	<script type="text/javascript">
+	window.onload = function() {
+
+      // Data based on example at http://dhruvaray.github.io/backbone-associations/tutorial.html
+
+      // Convert the associations into model definitions
+      var Location = Backbone.AssociatedModel.extend({
+        defaults: {
+          add1: '',
+          add2: null,
+          zip: '',
+          state: ''
+        }
+      });
+
+      var Project = Backbone.AssociatedModel.extend({
+        relations: [
+          {
+            type: Backbone.Many,
+            key: 'locations',
+            relatedModel: Location
+          }
+        ],
+        defaults: {
+          name: '',
+          number: 0,
+          locations: []
+        }
+      });
+
+
+      var Department = Backbone.AssociatedModel.extend({
+        relations: [
+          {
+            type: Backbone.Many,
+            key: 'controls',
+            relatedModel: Project
+          },
+          {
+            type: Backbone.Many,
+            key: 'locations',
+            relatedModel: Location
+          }
+        ],
+        defaults: {
+          name: '',
+          locations: [],
+          number: -1,
+          controls: []
+        }
+      });
+
+      var Dependent = Backbone.AssociatedModel.extend({
+        validate: function(attr) {
+          return (attr.sex && attr.sex != 'M' && attr.sex != 'F') ? 'invalid sex value' : undefined;
+        },
+        defaults: {
+          fname: '',
+          lname: '',
+          sex: 'F', //{F,M}
+          age: 0,
+          relationship: 'S' //Values {C=Child, P=Parents, S=Spouse}
+        }
+      });
+
+      var Employee = Backbone.AssociatedModel.extend({
+        relations: [
+          {
+            type: Backbone.One,
+            key: 'works_for',
+            relatedModel: Department
+          },
+          {
+            type: Backbone.Many,
+            key: 'dependents',
+            relatedModel: Dependent
+          },
+          {
+            type: Backbone.One,
+            key: 'manager',
+            relatedModel: function() {
+              return Employee;
+            }
+          },
+          {
+            type: Backbone.Many,
+            key: 'reports',
+            relatedModel: function() {
+              return Employee;
+            }
+          },
+        ],
+        validate: function(attr) {
+          return (attr.sex && attr.sex != 'M' && attr.sex != 'F') ? 'invalid sex value' : undefined;
+        },
+        defaults: {
+          sex: 'M', //{F,M}
+          age: 0,
+          fname: '',
+          lname: '',
+          works_for: {},
+          dependents: [],
+          reports: [],
+          manager: null
+        }
+      });
+
+      var Manager = Employee.extend({
+        relations: Employee.prototype.relations.slice(0).concat([
+          {
+            type: Backbone.Many,
+            key: 'employees',
+            relatedModel: Employee
+          }
+        ])
+      });
+
+      var emp = new Employee({
+        fname: 'John',
+        lname: 'Smith',
+        age: 21,
+        sex: 'M'
+      });
+
+      var manager = new Manager({
+        fname: 'Mary',
+        lname: 'Jones',
+        age: 46,
+        sex: 'F'
+      });
+
+      var child1 = new Dependent({
+        fname: 'Jane',
+        lname: 'Smith',
+        sex: 'F',
+        relationship: 'C'
+
+      });
+
+      var child2 = new Dependent({
+        fname: 'Barbara',
+        lname: 'Ruth',
+        sex: 'F',
+        relationship: 'C'
+
+      });
+
+      var parent1 = new Dependent({
+        fname: 'Edgar',
+        lname: 'Smith',
+        sex: 'M',
+        relationship: 'P'
+
+      });
+
+      var loc1 = new Location({
+        add1: 'P.O Box 3899',
+        zip: '94404',
+        state: 'CA'
+
+      });
+
+      var loc2 = new Location({
+        add1: 'P.O Box 4899',
+        zip: '95502',
+        state: 'CA'
+      });
+
+      var project1 = new Project({
+        name: 'Project X',
+        number: '2'
+      });
+
+      var project2 = new Project({
+        name: 'Project Y',
+        number: '2'
+      });
+
+      // Set up relationships
+      project2.get('locations').add(loc2);
+      project1.get('locations').add(loc1);
+
+      var dept1 = new Department({
+        name: 'R&D',
+        number: '23'
+      });
+
+      emp.set({
+        dependents: [child1, child2, parent1],
+        works_for: dept1,
+        manager: manager
+      });
+
+      // Add a circular reference
+      manager.set('employees', [emp]);
+
+      // Install Vue Backbone
+      Vue.use(VueBackbone, { associations: true });
+
+      new Vue({
+        el: '#demo',
+        bb: function() {
+          return {
+            employee: emp
+          }
+        },
+        mounted: function() {
+          // Check for deep nested reactivity
+          setTimeout(() => {
+            dept1.set({ locations: [loc1, loc2] });
+            dept1.set({ controls: [project1, project2] });
+          }, 3000);
+        },
+      });
+	}
+	</script>
+</head>
+<body>
+<div id="demo">
+    <h1>Employee</h1>
+    <dl>
+        <dt>Sex</dt>
+        <dd>{{ employee.sex }}</dd>
+
+        <dt>Age</dt>
+        <dd>{{ employee.age }}</dd>
+
+        <dt>First Name</dt>
+        <dd>{{ employee.fname }}</dd>
+
+        <dt>Last Name</dt>
+        <dd>{{ employee.lname }}</dd>
+
+        <dt>Works For (Nested Department Model)</dt>
+        <dd>
+            <dl>
+                <dt>Name</dt>
+                <dd>{{ employee.works_for.name }}</dd>
+
+                <dt>Number</dt>
+                <dd>{{ employee.works_for.number }}</dd>
+
+                <dt>Locations</dt>
+                <dd>
+                    <ul>
+                        <li v-for="location in employee.works_for.locations">{{ location.add1 }}, {{ location.zip }} {{ location.state}}</li>
+                    </ul>
+                </dd>
+
+                <dt>Controls (Nested Projects Collection)</dt>
+                <dd>
+                    <ul>
+                        <li v-for="control in employee.works_for.controls">{{ control.name }} ({{ control.number}})</li>
+                    </ul>
+                </dd>
+            </dl>
+        </dd>
+
+        <dt>Dependents (Nested Collection)</dt>
+        <dd>
+            <ul>
+                <li v-for="dependent in employee.dependents">
+                    {{ dependent.fname }} {{ dependent.lname }}
+                </li>
+            </ul>
+        </dd>
+
+        <dt>Manager (Nested Model)</dt>
+        <dd>
+            <dl>
+                <dt>First Name</dt>
+                <dd>{{ employee.manager.fname }}</dd>
+
+                <dt>Last Name</dt>
+                <dd>{{ employee.manager.lname }}</dd>
+
+                <dt>Sex</dt>
+                <dd>{{ employee.manager.sex }}</dd>
+
+                <dt>Age</dt>
+                <dd>{{ employee.manager.age }}</dd>
+
+                <dt>Employees (Nested Collection, circular back to top level employee)</dt>
+                <dd>
+                    <ul>
+                        <li v-for="employee in employee.manager.employees">
+                            {{ employee.fname }}
+                            {{ employee.lname }}
+                        </li>
+                    </ul>
+                </dd>
+            </dl>
+        </dd>
+
+    </dl>
+</div>
+</html>

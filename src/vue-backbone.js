@@ -9,7 +9,8 @@ var opts = {
 	conflictPrefix: "$",
 	addComputed: true,
 	dataPrefix: "_",
-	simpleCollectionProxy: false
+	simpleCollectionProxy: false,
+	associations: false,
 };
 
 /**
@@ -25,7 +26,16 @@ function vueBackboneProxy(bb) {
 				opts.simpleCollectionProxy
 			);
 		} else {
-			bb._vuebackbone_proxy = modelProxy(bb, opts.conflictPrefix);
+			bb._vuebackbone_proxy = modelProxy(bb, opts.conflictPrefix, opts.associations);
+			// https://github.com/dhruvaray/backbone-associations
+			if (opts.associations && bb.relations) {
+        bb.relations.forEach(rel => {
+          let relation = bb.get(rel.key);
+          if (relation) {
+            vueBackboneProxy(relation);
+					}
+				});
+      }
 		}
 	}
 }
@@ -35,16 +45,28 @@ function vueBackboneProxy(bb) {
  * beneath the Backbone objects
  */
 
-function rawSrcModel(model) {
+function rawSrcModel(model, recursiveSafety) {
+  // https://github.com/dhruvaray/backbone-associations
+	if (opts.associations && model.relations && !recursiveSafety.includes(model)) {
+    recursiveSafety.push(model);
+		const raw = Object.assign({}, model.attributes);
+		model.relations.forEach((relation) => {
+      let bb = model.attributes[relation.key];
+      if (bb) {
+        raw[relation.key] = rawSrc(bb, recursiveSafety);
+			}
+		});
+		return raw;
+	}
 	return model.attributes;
 }
 
-function rawSrcCollection(collection) {
-	return collection.map(rawSrcModel);
+function rawSrcCollection(collection, recursiveSafety) {
+	return collection.map(model => rawSrcModel(model, recursiveSafety));
 }
 
-function rawSrc(bb) {
-	return bb.models ? rawSrcCollection(bb) : rawSrcModel(bb);
+function rawSrc(bb, recursiveSafety) {
+	return bb.models ? rawSrcCollection(bb, recursiveSafety) : rawSrcModel(bb, recursiveSafety);
 }
 
 /**
@@ -73,7 +95,7 @@ function bindCollectionToVue(vm, key, ctx, bb) {
 
 	// Changes to collection array will require a full reset (for reactivity)
 	ctx.onchange = () => {
-		vm.$data[getDataKey(key)] = rawSrcCollection(bb);
+		vm.$data[getDataKey(key)] = rawSrcCollection(bb, []);
 		// Proxy array isn't by reference, so it needs to be updated
 		// (this is less costly than recreating it)
 		if (opts.proxies) {
@@ -92,7 +114,16 @@ function bindCollectionToVue(vm, key, ctx, bb) {
  * Model, there's a safety with warning for it.
  */
 function bindModelToVue(ctx, bb) {
-	ctx.onchange = () => {
+
+	// https://github.com/dhruvaray/backbone-associations
+	// Might need to setup proxy on new model/collection with relational attributes
+  if (opts.associations && bb.relations) {
+    bb.relations.forEach(rel => {
+			bb.on("change:" + rel.key, (model, val) => val && vueBackboneProxy(val))
+		});
+	}
+
+  ctx.onchange = () => {
 		// Test for new attribute
 		if (bb.keys().length > Object.keys(bb._previousAttributes).length) {
 			// Not an error, as it may be the case this attribute is not needed for Vue at all
@@ -139,7 +170,7 @@ function unbindBBFromVue(vm, key) {
 function extendData(vm, key) {
 	var origDataFn = vm.$options.data,
 		ctx = vm._vuebackbone[key],
-		value = rawSrc(ctx.bb),
+		value = rawSrc(ctx.bb, []),
 		dataKey = getDataKey(key);
 
 	vm.$options.data = function() {
@@ -183,7 +214,7 @@ function extendVm(vm, key) {
 		set(bb) {
 			unbindBBFromVue(vm, key);
 			ctx.bb = bb;
-			vm.$data[dataKey] = rawSrc(bb);
+			vm.$data[dataKey] = rawSrc(bb, []);
 			bindBBToVue(vm, key);
 		}
 	});
@@ -218,7 +249,7 @@ function extendComputed(vm, key) {
 				unbindBBFromVue(vm, key);
 				vueBackboneProxy(bb);
 				ctx.bb = bb;
-				vm.$data[dataKey] = rawSrc(bb);
+				vm.$data[dataKey] = rawSrc(bb, []);
 				bindBBToVue(vm, key);
 			}
 		};

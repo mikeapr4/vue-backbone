@@ -1,5 +1,5 @@
 /*!
- * Vue-Backbone v0.1.0
+ * Vue-Backbone v0.2.0
  * https://github.com/mikeapr4/vue-backbone
  * @license MIT
  */
@@ -132,6 +132,8 @@ exports.default = function (collection, simple) {
  *
  * To avoid interference, it's stored under the Model property `_vuebackbone_proxy`. This proxy
  * is only really intended to be used by Vue templates.
+ *
+ * Generate documentation using: https://jsfiddle.net/fLcn09eb/3/
  */
 
 var arrayPriority = ["slice", "forEach", "map", "reduce", "reduceRight", "find", "filter", "every", "some", "indexOf", "lastIndexOf", "findIndex"],
@@ -159,39 +161,7 @@ function checkForReturnsModels(func, key) {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-
-exports.default = function (model, conflictPrefix) {
-	var proxy = {};
-
-	// Attach bound version of all the model functions to the proxy
-	// these functions are readonly on the proxy and any future changes
-	// to the model functions won't be reflected in the Vue proxy
-	for (var key in model) {
-		if (typeof model[key] === "function" && key !== "constructor") {
-			var bndFunc = model[key].bind(model);
-			Object.defineProperty(proxy, key, { value: bndFunc });
-		}
-	}
-
-	// Attach getter/setters for the model attributes.
-	Object.keys(model.attributes).forEach(function (attr) {
-		proxyModelAttribute(proxy, model, attr, conflictPrefix);
-	});
-	if (!proxy.id) {
-		// sometimes ID is a field in the model (in which case it'll be proxied already)
-		Object.defineProperty(proxy, "id", {
-			get: function get() {
-				return model.id;
-			}
-		});
-	}
-
-	// Attach link back to original model
-	Object.defineProperty(proxy, "_vuebackbone_original", { value: model });
-
-	return proxy;
-};
-
+exports.default = modelProxy;
 /**
  * Create a proxy of the Backbone Model which maps direct access of attributes
  * to the get/set interface that Backbone normally provides. This allows for
@@ -221,6 +191,80 @@ function proxyModelAttribute(proxy, model, attr, conflictPrefix) {
 		get: getter,
 		set: setter
 	});
+}
+
+/**
+ * Attach proxy getter/setter for a model relationship (one-to-one or one-to-many)
+ *
+ * Getter should attempt to map to the proxy, while setter should attempt
+ * to switch back to original backbone object.
+ */
+function proxyModelRelation(proxy, model, attr, conflictPrefix) {
+	var getter = function getter() {
+		var val = model.get(attr);
+		return val && val._vuebackbone_proxy || val;
+	};
+	var setter = function setter(val) {
+		model.set(attr, val && val._vuebackbone_original || val);
+	};
+
+	// If there's a conflict with a function from the model, add the attribute with the prefix
+	var safeAttr = proxy[attr] ? conflictPrefix + attr : attr;
+
+	Object.defineProperty(proxy, safeAttr, {
+		enumerable: true,
+		get: getter,
+		set: setter
+	});
+}
+
+function modelProxy(model, conflictPrefix, associations) {
+	var proxy = {};
+
+	// Attach bound version of all the model functions to the proxy
+	// these functions are readonly on the proxy and any future changes
+	// to the model functions won't be reflected in the Vue proxy
+	for (var key in model) {
+		if (typeof model[key] === "function" && key !== "constructor") {
+			var bndFunc = model[key].bind(model);
+			Object.defineProperty(proxy, key, { value: bndFunc });
+		}
+	}
+
+	// https://github.com/dhruvaray/backbone-associations
+	if (associations && model.relations) {
+		var relations = model.relations.map(function (r) {
+			return r.key;
+		});
+		relations.forEach(function (attr) {
+			proxyModelRelation(proxy, model, attr, conflictPrefix);
+		});
+		// Attach getter/setters for the model attributes.
+		Object.keys(model.attributes).filter(function (attr) {
+			return !relations.includes(attr);
+		}).forEach(function (attr) {
+			proxyModelAttribute(proxy, model, attr, conflictPrefix);
+		});
+	} else {
+		// Attach getter/setters for the model attributes.
+		Object.keys(model.attributes).forEach(function (attr) {
+			proxyModelAttribute(proxy, model, attr, conflictPrefix);
+		});
+	}
+
+	if (!proxy.id) {
+		// sometimes ID is a field in the model (in which case it'll be proxied already)
+		Object.defineProperty(proxy, "id", {
+			get: function get() {
+				return model.id;
+			}
+		});
+	}
+
+	// Attach link back to original model
+	Object.defineProperty(proxy, "_vuebackbone_original", { value: model });
+
+	return proxy;
 }
 
 /***/ }),
@@ -255,7 +299,8 @@ var opts = {
 	conflictPrefix: "$",
 	addComputed: true,
 	dataPrefix: "_",
-	simpleCollectionProxy: false
+	simpleCollectionProxy: false,
+	associations: false
 };
 
 /**
@@ -268,7 +313,16 @@ function vueBackboneProxy(bb) {
 			bb.each(vueBackboneProxy);
 			bb._vuebackbone_proxy = (0, _collectionProxy2.default)(bb, opts.simpleCollectionProxy);
 		} else {
-			bb._vuebackbone_proxy = (0, _modelProxy2.default)(bb, opts.conflictPrefix);
+			bb._vuebackbone_proxy = (0, _modelProxy2.default)(bb, opts.conflictPrefix, opts.associations);
+			// https://github.com/dhruvaray/backbone-associations
+			if (opts.associations && bb.relations) {
+				bb.relations.forEach(function (rel) {
+					var relation = bb.get(rel.key);
+					if (relation) {
+						vueBackboneProxy(relation);
+					}
+				});
+			}
 		}
 	}
 }
@@ -278,16 +332,30 @@ function vueBackboneProxy(bb) {
  * beneath the Backbone objects
  */
 
-function rawSrcModel(model) {
+function rawSrcModel(model, recursiveSafety) {
+	// https://github.com/dhruvaray/backbone-associations
+	if (opts.associations && model.relations && !recursiveSafety.includes(model)) {
+		recursiveSafety.push(model);
+		var raw = Object.assign({}, model.attributes);
+		model.relations.forEach(function (relation) {
+			var bb = model.attributes[relation.key];
+			if (bb) {
+				raw[relation.key] = rawSrc(bb, recursiveSafety);
+			}
+		});
+		return raw;
+	}
 	return model.attributes;
 }
 
-function rawSrcCollection(collection) {
-	return collection.map(rawSrcModel);
+function rawSrcCollection(collection, recursiveSafety) {
+	return collection.map(function (model) {
+		return rawSrcModel(model, recursiveSafety);
+	});
 }
 
-function rawSrc(bb) {
-	return bb.models ? rawSrcCollection(bb) : rawSrcModel(bb);
+function rawSrc(bb, recursiveSafety) {
+	return bb.models ? rawSrcCollection(bb, recursiveSafety) : rawSrcModel(bb, recursiveSafety);
 }
 
 /**
@@ -318,7 +386,7 @@ function bindCollectionToVue(vm, key, ctx, bb) {
 
 	// Changes to collection array will require a full reset (for reactivity)
 	ctx.onchange = function () {
-		vm.$data[getDataKey(key)] = rawSrcCollection(bb);
+		vm.$data[getDataKey(key)] = rawSrcCollection(bb, []);
 		// Proxy array isn't by reference, so it needs to be updated
 		// (this is less costly than recreating it)
 		if (opts.proxies) {
@@ -337,6 +405,17 @@ function bindCollectionToVue(vm, key, ctx, bb) {
  * Model, there's a safety with warning for it.
  */
 function bindModelToVue(ctx, bb) {
+
+	// https://github.com/dhruvaray/backbone-associations
+	// Might need to setup proxy on new model/collection with relational attributes
+	if (opts.associations && bb.relations) {
+		bb.relations.forEach(function (rel) {
+			bb.on("change:" + rel.key, function (model, val) {
+				return val && vueBackboneProxy(val);
+			});
+		});
+	}
+
 	ctx.onchange = function () {
 		// Test for new attribute
 		if (bb.keys().length > Object.keys(bb._previousAttributes).length) {
@@ -382,7 +461,7 @@ function unbindBBFromVue(vm, key) {
 function extendData(vm, key) {
 	var origDataFn = vm.$options.data,
 	    ctx = vm._vuebackbone[key],
-	    value = rawSrc(ctx.bb),
+	    value = rawSrc(ctx.bb, []),
 	    dataKey = getDataKey(key);
 
 	vm.$options.data = function () {
@@ -428,7 +507,7 @@ function extendVm(vm, key) {
 		set: function set(bb) {
 			unbindBBFromVue(vm, key);
 			ctx.bb = bb;
-			vm.$data[dataKey] = rawSrc(bb);
+			vm.$data[dataKey] = rawSrc(bb, []);
 			bindBBToVue(vm, key);
 		}
 	});
@@ -463,7 +542,7 @@ function extendComputed(vm, key) {
 				unbindBBFromVue(vm, key);
 				vueBackboneProxy(bb);
 				ctx.bb = bb;
-				vm.$data[dataKey] = rawSrc(bb);
+				vm.$data[dataKey] = rawSrc(bb, []);
 				bindBBToVue(vm, key);
 			}
 		};

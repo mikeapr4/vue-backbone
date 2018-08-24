@@ -42,6 +42,8 @@ Clone or download the repo to run the examples.
 * [*TodoMVC*](https://github.com/mikeapr4/vue-backbone/tree/master/examples/todomvc) - combined Backbone and Vue TodoMVC examples
 * [*TodoMVC with Component*](https://github.com/mikeapr4/vue-backbone/tree/master/examples/todomvc-with-component) - more complex version of above
 * [*Comparison*](https://github.com/mikeapr4/vue-backbone/tree/master/examples/comparison) - in-browser performance test and comparison
+* [*Relational*](https://github.com/mikeapr4/vue-backbone/tree/master/examples/relational/backbone-associations.htm) - used with Backbone Associations
+
 
 ## License
 
