@@ -1,5 +1,5 @@
 /*!
- * Vue-Backbone v0.1.2
+ * Vue-Backbone v0.1.3
  * https://github.com/mikeapr4/vue-backbone
  * @license MIT
  */
