@@ -22,7 +22,7 @@ describe('Initialization', () => {
 				mounted() {
 					expect($sandbox.html()).toBe('<div>1</div>');
 					done();
-				}				
+				}
 			});
 	});
 
@@ -39,7 +39,7 @@ describe('Initialization', () => {
 				mounted() {
 					expect(console.error).toHaveBeenCalledWith('VueBackbone: Property \'list\' mustn\'t exist within the Vue data already');
 					done();
-				}				
+				}
 			});
 	});
 
@@ -56,7 +56,7 @@ describe('Initialization', () => {
 				mounted() {
 					expect(console.error).toHaveBeenCalledWith('VueBackbone: Property \'_list\' mustn\'t exist within the Vue data already');
 					done();
-				}				
+				}
 			});
 	});
 
@@ -72,7 +72,7 @@ describe('Initialization', () => {
 				mounted() {
 					expect(console.error).toHaveBeenCalledWith('VueBackbone: \'bb\' initialization option must be a function');
 					done();
-				}				
+				}
 			});
 	});
 
@@ -87,7 +87,7 @@ describe('Initialization', () => {
 				mounted() {
 					expect(console.error).toHaveBeenCalledWith('VueBackbone: Unrecognized Backbone object in Vue instantiation (list), must be a Collection or Model');
 					done();
-				}				
+				}
 			});
 	});
 
@@ -102,7 +102,7 @@ describe('Initialization', () => {
 				mounted() {
 					expect(console.error).toHaveBeenCalledWith('VueBackbone: Missing Backbone object in Vue prop \'list\'');
 					done();
-				}				
+				}
 			});
 	});
 
@@ -117,7 +117,7 @@ describe('Initialization', () => {
 				mounted() {
 					expect($sandbox.html()).toBe('<div>[]</div>');
 					done();
-				}				
+				}
 			});
 	});
 
@@ -133,10 +133,32 @@ describe('Initialization', () => {
 				mounted() {
 					expect($sandbox.html()).toBe('<div>[]1</div>');
 					done();
-				}				
+				}
 			});
 	});
 
+	it('should respect the data function', (done) => {
+
+		let collection = new Backbone.Collection();
+
+		const Child = {
+			data() {
+				return { uid: this._uid };
+			},
+			bb: () => ({list: collection}),
+			template: '<div>{{ list }}{{ uid }}</div>',
+		}
+
+		new Vue({
+			el,
+			components: { Child },
+			template: '<Child></Child>',
+			mounted() {
+				expect($sandbox.html()).toBe('<div>[]' + this.$children[0]._uid + '</div>');
+				done();
+			}
+		});
+	});
 
 	it('should trigger unbind when destroyed', (done) => {
 
@@ -155,7 +177,7 @@ describe('Initialization', () => {
 					collection.add({a: 1});
 					expect(this.$data._list).toEqual([]);
 					done();
-				}				
+				}
 			});
 	});
 

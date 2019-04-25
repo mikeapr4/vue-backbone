@@ -1,5 +1,5 @@
 /*!
- * Vue-Backbone v0.1.0
+ * Vue-Backbone v0.1.2
  * https://github.com/mikeapr4/vue-backbone
  * @license MIT
  */
@@ -132,6 +132,8 @@ exports.default = function (collection, simple) {
  *
  * To avoid interference, it's stored under the Model property `_vuebackbone_proxy`. This proxy
  * is only really intended to be used by Vue templates.
+ *
+ * Generate documentation using: https://jsfiddle.net/fLcn09eb/3/
  */
 
 var arrayPriority = ["slice", "forEach", "map", "reduce", "reduceRight", "find", "filter", "every", "some", "indexOf", "lastIndexOf", "findIndex"],
@@ -259,7 +261,7 @@ var opts = {
 };
 
 /**
- * Created a VueBackbone Proxy object which can be 
+ * Created a VueBackbone Proxy object which can be
  * accessed from the original Backbone Object
  */
 function vueBackboneProxy(bb) {
@@ -387,7 +389,7 @@ function extendData(vm, key) {
 
 	vm.$options.data = function () {
 		var data = {},
-		    origData = origDataFn ? origDataFn() : {};
+		    origData = origDataFn ? origDataFn.apply(this, arguments) : {};
 
 		if (origData.hasOwnProperty(key)) {
 			throw "VueBackbone: Property '" + key + "' mustn't exist within the Vue data already";
@@ -408,7 +410,7 @@ function extendData(vm, key) {
  * In the case proxies are disabled or computed accessor,
  * the Backbone instance is added to vm.$bb[key]
  *
- * Instance access will trigger, this._key (reactive) access, 
+ * Instance access will trigger, this._key (reactive) access,
  * which means any computed values recompute.
  * In the case of Collections, the reason this is needed is that calculations in the
  * collection can work off the internal models arrays, which isn't the same as the rawSrc one
@@ -438,7 +440,7 @@ function extendVm(vm, key) {
  * Update Vue computed functions, this will provide a handy accessor (key)
  * for mapped models of a collection, or the mapped model directly.
  *
- * Computed (this.key) access will trigger, this._key (reactive) access, 
+ * Computed (this.key) access will trigger, this._key (reactive) access,
  * which means any computed values recompute.
  * In the case of Collections, the reason this is needed is that calculations in the
  * collection can work off the internal models arrays, which isn't the same as the rawSrc one
